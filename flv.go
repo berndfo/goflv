@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"log"
 )
 
 type File struct {
@@ -14,6 +15,7 @@ type File struct {
 	size              int64
 	headerBuf         []byte
 	duration          float64
+	lastTimestampSet  bool
 	lastTimestamp     uint32
 	firstTimestampSet bool
 	firstTimestamp    uint32
@@ -114,17 +116,21 @@ func (flvFile *File) WriteVideoTag(data []byte, timestamp uint32) (err error) {
 
 // Write tag
 func (flvFile *File) WriteTag(data []byte, tagType byte, timestamp uint32) (err error) {
-	if timestamp < flvFile.lastTimestamp {
-		timestamp = flvFile.lastTimestamp
-	} else {
-		flvFile.lastTimestamp = timestamp
-	}
 	if !flvFile.firstTimestampSet {
 		flvFile.firstTimestampSet = true
 		flvFile.firstTimestamp = timestamp
+		log.Printf("FLV: firstTimestamp set to %d", timestamp)
 	}
-	timestamp -= flvFile.firstTimestamp
-	duration := float64(timestamp) / 1000.0
+	if timestamp < flvFile.lastTimestamp && flvFile.lastTimestampSet {
+		// TODO this is questionable. do tags always come in order?
+		log.Printf("FLV: corrected tag timestamp from %d to lastTimestamp %d", timestamp, flvFile.lastTimestamp)
+		timestamp = flvFile.lastTimestamp
+	} else {
+		flvFile.lastTimestamp = timestamp
+		flvFile.lastTimestampSet = true
+	}
+	timestamp -= flvFile.firstTimestamp // normalize to "start at zero"
+	duration := float64(timestamp) / 1000.0 // from msec to seconds
 	if flvFile.duration < duration {
 		flvFile.duration = duration
 	}
