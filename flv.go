@@ -122,9 +122,9 @@ func (flvFile *File) WriteTag(data []byte, tagType byte, timestamp uint32) (err 
 		log.Printf("FLV: firstTimestamp set to %d", timestamp)
 	}
 	if timestamp < flvFile.lastTimestamp && flvFile.lastTimestampSet {
-		// TODO this is questionable. do tags always come in order?
-		log.Printf("FLV: corrected tag timestamp from %d to lastTimestamp %d", timestamp, flvFile.lastTimestamp)
-		timestamp = flvFile.lastTimestamp
+		log.Printf("FLV: ts correction needed? tag timestamp %d < lastTimestamp %d", timestamp, flvFile.lastTimestamp)
+		// TODO this is questionable. do tags always come in order, especially video vs. audio?
+		// timestamp = flvFile.lastTimestamp
 	} else {
 		flvFile.lastTimestamp = timestamp
 		flvFile.lastTimestampSet = true
