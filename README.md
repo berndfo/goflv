@@ -1,4 +1,4 @@
-GoFLV [![Build Status](https://secure.travis-ci.org/zhangpeihao/goflv.png)](http://travis-ci.org/zhangpeihao/goflv)
+GoFLV [ ![Codeship Status for berndfo/goflv](https://codeship.com/projects/f5673bd0-343c-0133-a68d-56c8db4126b8/status?branch=master)](https://codeship.com/projects/100451)
 ======
 
 FLV file parser
