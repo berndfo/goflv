@@ -106,11 +106,13 @@ func (flvFile *File) Close() {
 
 // Data with audio header
 func (flvFile *File) WriteAudioTag(data []byte, timestamp uint32) (err error) {
+	//log.Printf("write audio ts = %d", timestamp)
 	return flvFile.WriteTag(data, AUDIO_TAG, timestamp)
 }
 
 // Data with video header
 func (flvFile *File) WriteVideoTag(data []byte, timestamp uint32) (err error) {
+	//log.Printf("write video ts = %d", timestamp)
 	return flvFile.WriteTag(data, VIDEO_TAG, timestamp)
 }
 
