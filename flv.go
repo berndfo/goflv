@@ -23,6 +23,7 @@ type File struct {
 
 type TagHeader struct {
 	TagType   byte
+	Encrypted bool
 	DataSize  uint32
 	Timestamp uint32
 }
@@ -97,6 +98,70 @@ func OpenFile(name string) (flvFile *File, err error) {
 		return nil, errors.New("File format error")
 	}
 
+	return
+}
+
+// extracts meta data for an audio tag
+// 
+// Format:
+// 0 = Linear PCM, platform endian
+// 1 = ADPCM
+// 2 = MP3
+// 3 = Linear PCM, little endian 4 = Nellymoser 16 kHz mono 5 = Nellymoser 8 kHz mono 6 = Nellymoser
+// 7 = G.711 A-law logarithmic PCM
+// 8 = G.711 mu-law logarithmic PCM
+// 9 = reserved
+// 10 = AAC
+// 11 = Speex
+// 14 = MP3 8 kHz
+// 15 = Device-specific sound
+//
+// Rate:
+// 0 = 5.5 kHz
+// 1 = 11 kHz
+// 2 = 22 kHz
+// 3 = 44 kHz
+//
+// Sample size: 
+// 0 = 8-bit samples
+// 1 = 16-bit samples
+func AudioMetaData(data []byte) (format int, sampleRate int, size int, stereo bool) {
+	if len(data) < 1 {
+		return -1, -1, -1, false
+	}
+	byt := data[0]
+	format = int(byt >> 4 & 0x0f)
+	sampleRate = int(byt >> 2 & 0x03)
+	size = int(byt >> 1 & 0x01)
+	stereo = (byt & 0x01) > 0
+	
+	return
+}
+
+// extracts meta data for an video tag
+// 
+// Frame type:
+// 1 = key frame (for AVC, a seekable frame)
+// 2 = inter frame (for AVC, a non-seekable frame)
+// 3 = disposable inter frame (H.263 only)
+// 4 = generated key frame (reserved for server use only) 
+// 5 = video info/command frame
+// 
+// Codec:
+// 2 = Sorenson H.263
+// 3 = Screen video
+// 4 = On2 VP6
+// 5 = On2 VP6 with alpha channel 
+// 6 = Screen video version 2
+// 7 = AVC
+func VideoMetaData(data []byte) (frameType int, codec int) {
+	if len(data) < 1 {
+		return -1, -1
+	}
+	byt := data[0]
+	frameType = int(byt >> 4 & 0x0f)
+	codec = int(byt & 0x0f)
+	
 	return
 }
 
@@ -219,7 +284,8 @@ func (flvFile *File) ReadTag() (header *TagHeader, data []byte, err error) {
 	if _, err = io.ReadFull(flvFile.file, tmpBuf[3:]); err != nil {
 		return
 	}
-	header.TagType = tmpBuf[3]
+	header.Encrypted = tmpBuf[3] & 0x20 > 0
+	header.TagType = tmpBuf[3] & 0x1F 
 
 	// Read tag size
 	if _, err = io.ReadFull(flvFile.file, tmpBuf[1:]); err != nil {

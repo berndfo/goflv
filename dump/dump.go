@@ -42,6 +42,13 @@ func main() {
 			log.Println("flvFile.ReadTag() error:", err)
 			break
 		}
+		if header.TagType == 8 {
+			format, sampleRate, size, stereo := flv.AudioMetaData(data)
+			log.Printf("format = %d, sampling rate = %d, size = %d, stereo = %t", format, sampleRate, size, stereo)
+		} else if header.TagType == 9 {
+			frameType, codec := flv.VideoMetaData(data)
+			log.Printf("frame type = %d, codec = %d", frameType, codec)
+		}
 		
 		tagTypeCounters[header.TagType] = tagTypeCounters[header.TagType] + 1
 		
