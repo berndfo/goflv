@@ -5,6 +5,7 @@ import (
 	"log"
 	"io"
 	"fmt"
+	_ "expvar"
 )
 
 var flvFileName *string = flag.String("file", "", "FLV file")
@@ -42,12 +43,14 @@ func main() {
 			log.Println("flvFile.ReadTag() error:", err)
 			break
 		}
+		
+		addTagInfo := ""
 		if header.TagType == 8 {
 			format, sampleRate, size, stereo := flv.AudioMetaData(data)
-			log.Printf("format = %d, sampling rate = %d, size = %d, stereo = %t", format, sampleRate, size, stereo)
+			addTagInfo = fmt.Sprintf("format = %d, sampling rate = %d, size = %d, stereo = %t", format, sampleRate, size, stereo)
 		} else if header.TagType == 9 {
 			frameType, codec := flv.VideoMetaData(data)
-			log.Printf("frame type = %d, codec = %d", frameType, codec)
+			addTagInfo = fmt.Sprintf("frame type = %d, codec = %d", frameType, codec)
 		}
 		
 		tagTypeCounters[header.TagType] = tagTypeCounters[header.TagType] + 1
@@ -58,7 +61,7 @@ func main() {
 		}
 		tagTypeLatestTimestamp[header.TagType] = ts64 
 		
-		log.Printf("tag: %+v, data length: %d, %s", header, len(data), message)
+		log.Printf("tag: %+v, data length: %d, %s, %s", header, len(data), message, addTagInfo)
 	}
 	
 	log.Printf("")
